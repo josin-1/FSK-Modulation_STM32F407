@@ -14,18 +14,18 @@
 
 #include "arm_math.h"
 
-#define FSK_FILTER_T_Bit 0.3f	// [s]
-#define FSK_FILTER_Fs 10000	// [Hz]
-#define FSK_FILTER_F0 440		// [Hz]
-#define FSK_FILTER_F1 880		// [Hz]
+#define FSK_FILTER_T_Bit 0.2f	// [s]
+#define FSK_FILTER_Fs 400		// [Hz]
+#define FSK_FILTER_F0 40		// [Hz]
+#define FSK_FILTER_F1 80		// [Hz]
 #define FSK_FILTER_A 0.2f
 
-#define FSK_FILTER_IDLE_STEP_SZ 20
-#define FSK_FILTER_SCHWELLENWERT_HIGH 24
-#define FSK_FILTER_SCHWELLENWERT_LOW 18
+#define FSK_FILTER_IDLE_STEP_SZ 3
+#define FSK_FILTER_SCHWELLENWERT_HIGH 1.0f
+#define FSK_FILTER_SCHWELLENWERT_LOW 0.6f
 
 
-#define FSK_FILTER_BUF_SZ 3000 // T_Bit * Fs
+#define FSK_FILTER_BUF_SZ 80// T_Bit * Fs
 
 typedef struct {
 	float adc_buf[FSK_FILTER_BUF_SZ];
