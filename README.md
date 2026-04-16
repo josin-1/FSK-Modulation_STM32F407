@@ -18,7 +18,9 @@ The Matlab script is build on a dialog sequence.<br>
 Choosing **Yes** on **Continous Messaging**, results in an endless loop to input strings, which will be outputted through the speaker/AUX (with added noise), and can be picked up by the STM32's ADC.<br>
 **No** gives the possibility to enter one string, add noise to it, output it, and demodulate it.<br>
 There are also animatedLine's implemented in the script, to visualize the demodulation.<br>
-The generated signal will be saved to a WAV-file with a hardcoded filename (msg.wav), set at line 11
+The generated signal will be saved to a WAV-file with a hardcoded filename (msg.wav), set at line 11<br>
+
+Right now there are two possibile Demodulations implemented, once with a convolution, using conv(), and one with Dot-Products, and a IQ-Method. Both versions can be choosen, as part of the dialog sequence 
 
 ## STM32
 The STM32F407 will be programmed using STM32CubeIDE.<br>

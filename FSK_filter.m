@@ -8,8 +8,10 @@ classdef FSK_filter
         calc_ptr    {mustBeNumeric}
 
         % Filter Functions
-        s0     {mustBeNumeric}
-        s1     {mustBeNumeric}
+        s0_sin     {mustBeNumeric}
+        s0_cos     {mustBeNumeric}
+        s1_sin     {mustBeNumeric}
+        s1_cos     {mustBeNumeric}
 
         % Output Values
         y0     {mustBeNumeric}
@@ -36,11 +38,13 @@ classdef FSK_filter
             % calculate filter function
             k = (T_bit*Fs - 1):-1:0;
             t = k/Fs;
-            obj.s0 = A*sin(2*pi*f0*t);
-            obj.s1 = A*sin(2*pi*f1*t);
+            obj.s0_sin = A*sin(2*pi*f0*t);
+            obj.s0_cos = A*cos(2*pi*f0*t);
+            obj.s1_sin = A*sin(2*pi*f1*t);
+            obj.s1_cos = A*cos(2*pi*f1*t);
 
             % init buffers
-            obj.BUF_SZ = T_bit*Fs + 1;
+            obj.BUF_SZ = T_bit*Fs;
             obj.adc_buf = zeros(1, obj.BUF_SZ);
             obj.adc_ptr = 1;
             obj.calc_buf = zeros(1, obj.BUF_SZ);
@@ -108,9 +112,17 @@ classdef FSK_filter
             % low (should be a bit smaller than high), because the at the
             % next T_bit conv() it could be a bit smaller than
             % threshold_high
-
-            obj.y0 = rms(filter(obj.s0, 1, obj.calc_buf));
+                
+            % Old Calculations
+            % ---
+            % obj.y0 = rms(filter(obj.s0, 1, obj.calc_buf));
             % obj.y0 = rms(conv(obj.calc_buf, obj.s0));
+            % obj.y0 = rms(dot(obj.calc_buf, obj.s0));
+            % ---
+
+            I = dot(obj.calc_buf, obj.s0_sin);
+            Q = dot(obj.calc_buf, obj.s0_cos);
+            obj.y0 = I^2 + Q^2;
             if (obj.signal_detected == 0 && obj.y0 >= obj.threshold_high) || ...
                (obj.signal_detected == 1 && obj.y0 >= obj.threshold_low);
                 if obj.signal_detected == 0
@@ -122,9 +134,17 @@ classdef FSK_filter
                 obj.byte = bitor(obj.byte, bitshift(0b0, 7-obj.bit_cnt));
                 obj.bit_cnt = obj.bit_cnt + 1;
             end
-
-            obj.y1 = rms(filter(obj.s1, 1, obj.calc_buf));
+            
+            % Old Calculations
+            % ---
+            % obj.y1 = rms(filter(obj.s1, 1, obj.calc_buf));
             % obj.y1 = rms(conv(obj.calc_buf, obj.s1));
+            % obj.y1 = rms(dot(obj.calc_buf, obj.s1));
+            % ---
+            
+            I = dot(obj.calc_buf, obj.s1_sin);
+            Q = dot(obj.calc_buf, obj.s1_cos);
+            obj.y1 = I^2 + Q^2;
             if (obj.signal_detected == 0 && obj.y1 >= obj.threshold_high) || ...
                (obj.signal_detected == 1 && obj.y1 >= obj.threshold_low);
                 if obj.signal_detected == 0
