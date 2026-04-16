@@ -6,12 +6,20 @@ classdef FSK_filter
         adc_ptr     {mustBeNumeric}
         calc_buf    {mustBeNumeric}
         calc_ptr    {mustBeNumeric}
+        
+        % Variable to choose if convolution or
+        % Dot-Product demodulation is used
+        demod_proc
 
         % Filter Functions
         s0_sin     {mustBeNumeric}
         s0_cos     {mustBeNumeric}
         s1_sin     {mustBeNumeric}
         s1_cos     {mustBeNumeric}
+        I_0        {mustBeNumeric}
+        Q_0        {mustBeNumeric}
+        I_1        {mustBeNumeric}
+        Q_1        {mustBeNumeric}
 
         % Output Values
         y0     {mustBeNumeric}
@@ -34,7 +42,7 @@ classdef FSK_filter
     end
 
     methods
-        function obj = FSK_filter(T_bit, Fs, f0, f1, A, thresh_h, thresh_l, skip_Ts_idle)
+        function obj = FSK_filter(T_bit, Fs, f0, f1, A, thresh_h, thresh_l, skip_Ts_idle, demod_proc)
             % calculate filter function
             k = (T_bit*Fs - 1):-1:0;
             t = k/Fs;
@@ -42,6 +50,13 @@ classdef FSK_filter
             obj.s0_cos = A*cos(2*pi*f0*t);
             obj.s1_sin = A*sin(2*pi*f1*t);
             obj.s1_cos = A*cos(2*pi*f1*t);
+            
+            obj.demod_proc = demod_proc;
+            
+            obj.I_0 = 0;
+            obj.Q_0 = 0;
+            obj.I_1 = 0;
+            obj.Q_1 = 0;
 
             % init buffers
             obj.BUF_SZ = T_bit*Fs;
@@ -113,18 +128,17 @@ classdef FSK_filter
             % next T_bit conv() it could be a bit smaller than
             % threshold_high
                 
-            % Old Calculations
-            % ---
-            % obj.y0 = rms(filter(obj.s0, 1, obj.calc_buf));
-            % obj.y0 = rms(conv(obj.calc_buf, obj.s0));
-            % obj.y0 = rms(dot(obj.calc_buf, obj.s0));
-            % ---
-
-            I = dot(obj.calc_buf, obj.s0_sin);
-            Q = dot(obj.calc_buf, obj.s0_cos);
-            obj.y0 = I^2 + Q^2;
+            if strcmp(obj.demod_proc, 'conv')
+                % filter() and conv() interchangably
+                % obj.y0 = rms(filter(obj.s0_sin, 1, obj.calc_buf));
+                obj.y0 = rms(conv(obj.calc_buf, obj.s0_sin));
+            else
+                obj.I_0 = dot(obj.calc_buf, obj.s0_sin);
+                obj.Q_0 = dot(obj.calc_buf, obj.s0_cos);
+                obj.y0 = obj.I_0^2 + obj.Q_0^2;
+            end
             if (obj.signal_detected == 0 && obj.y0 >= obj.threshold_high) || ...
-               (obj.signal_detected == 1 && obj.y0 >= obj.threshold_low);
+               (obj.signal_detected == 1 && obj.y0 >= obj.threshold_low)
                 if obj.signal_detected == 0
                     obj.signal_detected = 1;
                 end
@@ -135,24 +149,24 @@ classdef FSK_filter
                 obj.bit_cnt = obj.bit_cnt + 1;
             end
             
-            % Old Calculations
-            % ---
-            % obj.y1 = rms(filter(obj.s1, 1, obj.calc_buf));
-            % obj.y1 = rms(conv(obj.calc_buf, obj.s1));
-            % obj.y1 = rms(dot(obj.calc_buf, obj.s1));
-            % ---
-            
-            I = dot(obj.calc_buf, obj.s1_sin);
-            Q = dot(obj.calc_buf, obj.s1_cos);
-            obj.y1 = I^2 + Q^2;
+
+            if strcmp(obj.demod_proc, 'conv')
+                % filter() and conv() interchangably
+                % obj.y1 = rms(filter(obj.s1_sin, 1, obj.calc_buf));
+                obj.y1 = rms(conv(obj.calc_buf, obj.s1_sin));
+            else
+                obj.I_1 = dot(obj.calc_buf, obj.s1_sin);
+                obj.Q_1 = dot(obj.calc_buf, obj.s1_cos);
+                obj.y1 = obj.I_1^2 + obj.Q_1^2;
+            end
             if (obj.signal_detected == 0 && obj.y1 >= obj.threshold_high) || ...
-               (obj.signal_detected == 1 && obj.y1 >= obj.threshold_low);
+               (obj.signal_detected == 1 && obj.y1 >= obj.threshold_low)
                 if obj.signal_detected == 0
                     obj.signal_detected = 1;
                 end
                 
-                % Bitshift a 1 into the current bit position (which is
-                % unnecessary), and or it together with the complete byte
+                % Bitshift a 1 into the current bit position, 
+                % and or it together with the complete byte
                 obj.byte = bitor(obj.byte, bitshift(0b1, 7-obj.bit_cnt));
                 obj.bit_cnt = obj.bit_cnt + 1;
             end
