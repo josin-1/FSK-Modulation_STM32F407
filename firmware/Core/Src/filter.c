@@ -7,12 +7,30 @@
 
 #include "filter.h"
 
+float FSK_Filter_DotP(FSK_Filter* f, float* a, float* b) {
+	/*
+	rewritten from:
+	https://arm-software.github.io/CMSIS_5/DSP/html/arm_dotproduct_example_f32_8c-example.html
+	*/
+	float32_t output;  /* Final ouput */
+	/* Multiplication of two input buffers */
+	arm_mult_f32(a, b, f->dotBuf, FSK_FILTER_BUF_SZ);
+	/* Accumulate the multiplication output values to
+	   get the dot product of the two inputs */
+	for(uint32_t i = 0; i < FSK_FILTER_BUF_SZ; i++)
+	{
+	  arm_add_f32(&output, &(f->dotBuf[i]), &output, 1);
+	}
+	return output;
+}
 
 void FSK_Filter_init(FSK_Filter *f) {
 	for (uint32_t k = FSK_FILTER_BUF_SZ; k > 0; --k) {
 		float t = k / FSK_FILTER_Fs;
-		f->s0[k - 1] = FSK_FILTER_A * sin(2 * M_PI * FSK_FILTER_F0 * t);
-		f->s1[k - 1] = FSK_FILTER_A * sin(2 * M_PI * FSK_FILTER_F1 * t);
+		f->s0_sin[k - 1] = FSK_FILTER_A * sin(2 * M_PI * FSK_FILTER_F0 * t);
+		f->s0_cos[k - 1] = FSK_FILTER_A * cos(2 * M_PI * FSK_FILTER_F0 * t);
+		f->s1_sin[k - 1] = FSK_FILTER_A * sin(2 * M_PI * FSK_FILTER_F1 * t);
+		f->s1_cos[k - 1] = FSK_FILTER_A * cos(2 * M_PI * FSK_FILTER_F0 * t);
 	}
 
 	for (uint32_t i = 0; i < FSK_FILTER_BUF_SZ; ++i) {
@@ -21,6 +39,11 @@ void FSK_Filter_init(FSK_Filter *f) {
 	}
 	f->adc_ptr = 0;
 	f->calc_ptr = 0;
+
+	f->I_0 = 0;
+	f->Q_0 = 0;
+	f->I_1 = 0;
+	f->Q_1 = 0;
 
 	f->y0 = 0;
 	f->y1 = 0;
@@ -74,15 +97,23 @@ void FSK_Filter_conv(FSK_Filter *f) {
 	// low (should be a bit smaller than high), because the at the
 	// next T_bit conv() it could be a bit smaller than
 	// threshold_high
+
+	/*
 	float conv_buf[FSK_FILTER_BUF_SZ * 2];
 
 	for (uint32_t i = 0; i < FSK_FILTER_BUF_SZ * 2; ++i) {
 		conv_buf[i] = 0;
 	}
 
-	arm_conv_f32(f->s0, FSK_FILTER_BUF_SZ, f->calc_buf, FSK_FILTER_BUF_SZ,
+	arm_conv_f32(f->s0_sin, FSK_FILTER_BUF_SZ, f->calc_buf, FSK_FILTER_BUF_SZ,
 			&conv_buf);
 	arm_rms_f32(&conv_buf, FSK_FILTER_BUF_SZ * 2, &(f->y0));
+	*/
+
+	f->I_0 = FSK_Filter_DotP(f, f->calc_buf, f->s0_sin);
+	f->Q_0 = FSK_Filter_DotP(f, f->calc_buf, f->s0_cos);
+	f->y0 = (f->s0_sin*f->s0_sin) + (f->s0_cos*f->s0_cos);
+
 	if ((f->signal_detected == 0 && f->y0 >= f->threshold_high)
 			|| (f->signal_detected == 1 && f->y0 >= f->threshold_low)) {
 		if (f->signal_detected == 0) {
@@ -95,13 +126,20 @@ void FSK_Filter_conv(FSK_Filter *f) {
 		f->bit_cnt++;
 	}
 
+	/*
 	for (uint32_t i = 0; i < FSK_FILTER_BUF_SZ * 2; ++i) {
 		conv_buf[i] = 0;
 	}
 
-	arm_conv_f32(f->s1, FSK_FILTER_BUF_SZ, f->calc_buf, FSK_FILTER_BUF_SZ,
+	arm_conv_f32(f->s1_sin, FSK_FILTER_BUF_SZ, f->calc_buf, FSK_FILTER_BUF_SZ,
 			&conv_buf);
 	arm_rms_f32(&conv_buf, FSK_FILTER_BUF_SZ * 2, &(f->y0));
+	*/
+
+	f->I_1 = FSK_Filter_DotP(f, f->calc_buf, f->s1_sin);
+	f->Q_1 = FSK_Filter_DotP(f, f->calc_buf, f->s1_cos);
+	f->y1 = (f->s1_sin*f->s1_sin) + (f->s1_cos*f->s1_cos);
+
 	if ((f->signal_detected == 0 && f->y1 >= f->threshold_high)
 			|| (f->signal_detected == 1 && f->y1 >= f->threshold_low)) {
 		if (f->signal_detected == 0) {
