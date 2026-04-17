@@ -1,5 +1,5 @@
-../Core/Src/filter.c:11:6:FSK_Filter_init	40	static
-../Core/Src/filter.c:42:6:FSK_Filter_addVal	16	static
-../Core/Src/filter.c:51:6:FSK_Filter_conv	24040	static
-../Core/Src/filter.c:123:6:FSK_Filter_update	16	static
-../Core/Src/filter.c:138:9:FSK_Filter_isByteFinished	16	static
+../Core/Src/filter.c:14:6:FSK_Filter_init	40	static
+../Core/Src/filter.c:45:6:FSK_Filter_addVal	16	static
+../Core/Src/filter.c:54:6:FSK_Filter_conv	680	static
+../Core/Src/filter.c:126:6:FSK_Filter_update	16	static
+../Core/Src/filter.c:146:9:FSK_Filter_isByteFinished	16	static

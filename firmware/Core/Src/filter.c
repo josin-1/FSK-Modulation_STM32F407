@@ -152,7 +152,7 @@ void FSK_Filter_conv(FSK_Filter *f) {
 		f->bit_cnt++;
 	}
 
-	// not 1 or 0 detected therefor transmission complete!
+	// not 1 or 0 detected therefore transmission complete!
 	if (f->y0 <= f->threshold_low && f->y1 <= f->threshold_low) {
 		f->signal_detected = 0;
 	}
@@ -171,6 +171,11 @@ void FSK_Filter_update(FSK_Filter *f, float new_val) {
 
 		FSK_Filter_conv(f);
 	}
+
+	if (f->y0 > maxY0)
+		maxY0 = f->y0;
+	if (f->y1 > maxY1)
+		maxY1 = f->y1;
 }
 
 uint8_t FSK_Filter_isByteFinished(FSK_Filter *f) {
