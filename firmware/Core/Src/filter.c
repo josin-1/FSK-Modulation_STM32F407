@@ -7,10 +7,13 @@
 
 #include "filter.h"
 
+float maxY0;
+float maxY1;
+
 
 void FSK_Filter_init(FSK_Filter *f) {
 	for (uint32_t k = FSK_FILTER_BUF_SZ; k > 0; --k) {
-		float t = k / FSK_FILTER_Fs;
+		float t = k / (float) FSK_FILTER_Fs;
 		f->s0[k - 1] = FSK_FILTER_A * sin(2 * M_PI * FSK_FILTER_F0 * t);
 		f->s1[k - 1] = FSK_FILTER_A * sin(2 * M_PI * FSK_FILTER_F1 * t);
 	}
@@ -74,15 +77,15 @@ void FSK_Filter_conv(FSK_Filter *f) {
 	// low (should be a bit smaller than high), because the at the
 	// next T_bit conv() it could be a bit smaller than
 	// threshold_high
-	float conv_buf[FSK_FILTER_BUF_SZ * 2];
+	float32_t conv_buf[FSK_FILTER_BUF_SZ * 2];
 
 	for (uint32_t i = 0; i < FSK_FILTER_BUF_SZ * 2; ++i) {
 		conv_buf[i] = 0;
 	}
 
 	arm_conv_f32(f->s0, FSK_FILTER_BUF_SZ, f->calc_buf, FSK_FILTER_BUF_SZ,
-			&conv_buf);
-	arm_rms_f32(&conv_buf, FSK_FILTER_BUF_SZ * 2, &(f->y0));
+			conv_buf);
+	arm_rms_f32(conv_buf, FSK_FILTER_BUF_SZ * 2, &(f->y0));
 	if ((f->signal_detected == 0 && f->y0 >= f->threshold_high)
 			|| (f->signal_detected == 1 && f->y0 >= f->threshold_low)) {
 		if (f->signal_detected == 0) {
@@ -100,8 +103,8 @@ void FSK_Filter_conv(FSK_Filter *f) {
 	}
 
 	arm_conv_f32(f->s1, FSK_FILTER_BUF_SZ, f->calc_buf, FSK_FILTER_BUF_SZ,
-			&conv_buf);
-	arm_rms_f32(&conv_buf, FSK_FILTER_BUF_SZ * 2, &(f->y0));
+			conv_buf);
+	arm_rms_f32(conv_buf, FSK_FILTER_BUF_SZ * 2, &(f->y1));
 	if ((f->signal_detected == 0 && f->y1 >= f->threshold_high)
 			|| (f->signal_detected == 1 && f->y1 >= f->threshold_low)) {
 		if (f->signal_detected == 0) {
@@ -114,7 +117,7 @@ void FSK_Filter_conv(FSK_Filter *f) {
 		f->bit_cnt++;
 	}
 
-	// not 1 or 0 detected therefor transmission complete!
+	// not 1 or 0 detected therefore transmission complete!
 	if (f->y0 <= f->threshold_low && f->y1 <= f->threshold_low) {
 		f->signal_detected = 0;
 	}
@@ -133,6 +136,11 @@ void FSK_Filter_update(FSK_Filter *f, float new_val) {
 
 		FSK_Filter_conv(f);
 	}
+
+	if (f->y0 > maxY0)
+		maxY0 = f->y0;
+	if (f->y1 > maxY1)
+		maxY1 = f->y1;
 }
 
 uint8_t FSK_Filter_isByteFinished(FSK_Filter *f) {
