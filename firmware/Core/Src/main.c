@@ -36,6 +36,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define ADC_BUF_SZ 1
+#define MSG_BUF_SZ 50
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -49,6 +50,8 @@
 uint16_t adc_buffer[ADC_BUF_SZ];
 uint16_t aktueller_wert;
 uint8_t current_byte;
+uint8_t msg[MSG_BUF_SZ]
+uint32_t msg_pointer;
 
 FSK_Filter filter1;
 
@@ -64,14 +67,24 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+  /*
 	float newVal =
 			__LL_ADC_CALC_DATA_TO_VOLTAGE(3000, adc_buffer[0],
 					ADC_RESOLUTION12b)
 					/ 1000.0f;
+  */
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
-	FSK_Filter_update(&filter1, newVal - 1.5f);
+	FSK_Filter_update(&filter1, (uint32_t)adc_buffer[0]);
 	if (FSK_Filter_isByteFinished(&filter1)) {
-		current_byte = (&filter1)->byte;
+    if ((&filter1)->byte == 0b10101010){
+      for (uint32_t i = 0; i < MSG_BUF_SZ; ++i){
+        msg[i] = '\0';
+      }
+      msg_pointer = 0;
+    }
+    else{
+		  msg[msg_pointer++] = (&filter1)->byte;
+    }
 	}
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
 

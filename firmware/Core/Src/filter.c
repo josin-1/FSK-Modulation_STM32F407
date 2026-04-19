@@ -7,19 +7,10 @@
 
 #include "filter.h"
 
-float FSK_Filter_DotP(FSK_Filter* f, float* a, float* b) {
-	/*
-	rewritten from:
-	https://arm-software.github.io/CMSIS_5/DSP/html/arm_dotproduct_example_f32_8c-example.html
-	*/
-	float32_t output;  /* Final ouput */
-	/* Multiplication of two input buffers */
-	arm_mult_f32(a, b, f->dotBuf, FSK_FILTER_BUF_SZ);
-	/* Accumulate the multiplication output values to
-	   get the dot product of the two inputs */
-	for(uint32_t i = 0; i < FSK_FILTER_BUF_SZ; i++)
-	{
-	  arm_add_f32(&output, &(f->dotBuf[i]), &output, 1);
+uint32_t FSK_Filter_DotP(uint32_t* a, uint32_t* b, uint32_t arrSZ) {
+	uint32_t output = 0;  /* Final ouput */
+	for(uint32_t i = 0; i < arrSZ; i++) {
+		output += a[i] * b[i];
 	}
 	return output;
 }
@@ -62,7 +53,7 @@ void FSK_Filter_init(FSK_Filter *f) {
 	f->byte = 0;
 }
 
-void FSK_Filter_addVal(FSK_Filter *f, float new_val) {
+void FSK_Filter_addVal(FSK_Filter *f, uint32_t new_val) {
 	f->adc_buf[f->adc_ptr] = new_val;
 
 	f->adc_ptr++;
@@ -110,8 +101,8 @@ void FSK_Filter_conv(FSK_Filter *f) {
 	arm_rms_f32(&conv_buf, FSK_FILTER_BUF_SZ * 2, &(f->y0));
 	*/
 
-	f->I_0 = FSK_Filter_DotP(f, f->calc_buf, f->s0_sin);
-	f->Q_0 = FSK_Filter_DotP(f, f->calc_buf, f->s0_cos);
+	f->I_0 = FSK_Filter_DotP(f->calc_buf, f->s0_sin, FSK_FILTER_BUF_SZ);
+	f->Q_0 = FSK_Filter_DotP(f->calc_buf, f->s0_cos, FSK_FILTER_BUF_SZ);
 	f->y0 = (f->s0_sin*f->s0_sin) + (f->s0_cos*f->s0_cos);
 
 	if ((f->signal_detected == 0 && f->y0 >= f->threshold_high)
@@ -136,8 +127,8 @@ void FSK_Filter_conv(FSK_Filter *f) {
 	arm_rms_f32(&conv_buf, FSK_FILTER_BUF_SZ * 2, &(f->y0));
 	*/
 
-	f->I_1 = FSK_Filter_DotP(f, f->calc_buf, f->s1_sin);
-	f->Q_1 = FSK_Filter_DotP(f, f->calc_buf, f->s1_cos);
+	f->I_1 = FSK_Filter_DotP(f, f->calc_buf, f->s1_sin, FSK_FILTER_BUF_SZ);
+	f->Q_1 = FSK_Filter_DotP(f, f->calc_buf, f->s1_cos, FSK_FILTER_BUF_SZ);
 	f->y1 = (f->s1_sin*f->s1_sin) + (f->s1_cos*f->s1_cos);
 
 	if ((f->signal_detected == 0 && f->y1 >= f->threshold_high)
@@ -158,7 +149,7 @@ void FSK_Filter_conv(FSK_Filter *f) {
 	}
 }
 
-void FSK_Filter_update(FSK_Filter *f, float new_val) {
+void FSK_Filter_update(FSK_Filter *f, uint32_t new_val) {
 	FSK_Filter_addVal(f, new_val);
 
 	f->skip_Ts_idle_CNT++;

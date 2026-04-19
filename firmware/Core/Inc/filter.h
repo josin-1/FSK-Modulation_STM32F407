@@ -28,31 +28,31 @@
 #define FSK_FILTER_BUF_SZ 1000 // T_Bit * Fs
 
 typedef struct {
-	float adc_buf[FSK_FILTER_BUF_SZ];
+	uint32_t adc_buf[FSK_FILTER_BUF_SZ];
 	uint32_t adc_ptr;
-	float calc_buf[FSK_FILTER_BUF_SZ];
+	uint32_t calc_buf[FSK_FILTER_BUF_SZ];
 	uint32_t calc_ptr;
 
-	float s0_sin[FSK_FILTER_BUF_SZ];
-	float s0_cos[FSK_FILTER_BUF_SZ];
-	float s1_sin[FSK_FILTER_BUF_SZ];
-	float s1_cos[FSK_FILTER_BUF_SZ];
+	uint32_t s0_sin[FSK_FILTER_BUF_SZ];
+	uint32_t s0_cos[FSK_FILTER_BUF_SZ];
+	uint32_t s1_sin[FSK_FILTER_BUF_SZ];
+	uint32_t s1_cos[FSK_FILTER_BUF_SZ];
 
-	float I_0;
-	float Q_0;
-	float I_1;
-	float Q_0;
+	uint32_t I_0;
+	uint32_t Q_0;
+	uint32_t I_1;
+	uint32_t Q_1;
 
-	float dotBuf[FSK_FILTER_BUF_SZ];
+	uint32_t dotBuf[FSK_FILTER_BUF_SZ];
 
-	float y0;
-	float y1;
+	uint32_t y0;
+	uint32_t y1;
 
 	uint32_t skip_Ts_idle;
 	uint32_t skip_Ts_idle_CNT;
 
-	float threshold_high;
-	float threshold_low;
+	uint32_t threshold_high;
+	uint32_t threshold_low;
 
 	uint32_t T_bit_Counter;
 
@@ -63,11 +63,11 @@ typedef struct {
 
 } FSK_Filter;
 
-float FSK_Filter_DotP(FSK_Filter*, float*, float*):
+uint32_t FSK_Filter_DotP(uint32_t*, uint32_t*, uint32_t);
 void FSK_Filter_init(FSK_Filter*);
-void FSK_Filter_addVal(FSK_Filter*, float);
+void FSK_Filter_addVal(FSK_Filter*, uint32_t);
 void FSK_Filter_conv(FSK_Filter*);
-void FSK_Filter_update(FSK_Filter*, float);
+void FSK_Filter_update(FSK_Filter*, uint32_t);
 uint8_t FSK_Filter_isByteFin(FSK_Filter*);
 
 
