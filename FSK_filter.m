@@ -46,6 +46,7 @@ classdef FSK_filter
             % calculate filter function
             k = (T_bit*Fs - 1):-1:0;
             t = k/Fs;
+
             obj.s0_sin = A*sin(2*pi*f0*t);
             obj.s0_cos = A*cos(2*pi*f0*t);
             obj.s1_sin = A*sin(2*pi*f1*t);

@@ -15,38 +15,38 @@
 #include "arm_math.h"
 
 #define FSK_FILTER_T_Bit 0.1f	// [s]
-#define FSK_FILTER_Fs 10000  	// [Hz]
+#define FSK_FILTER_Fs 2500  	// [Hz]
 #define FSK_FILTER_F0 440		// [Hz]
 #define FSK_FILTER_F1 880		// [Hz]
 #define FSK_FILTER_A 0.2f
 
 #define FSK_FILTER_IDLE_STEP_SZ 10
-#define FSK_FILTER_SCHWELLENWERT_HIGH 350
-#define FSK_FILTER_SCHWELLENWERT_LOW 300
+#define FSK_FILTER_SCHWELLENWERT_HIGH 16
+#define FSK_FILTER_SCHWELLENWERT_LOW 12
 
 
-#define FSK_FILTER_BUF_SZ 1000 // T_Bit * Fs
+#define FSK_FILTER_BUF_SZ 250 // T_Bit * Fs
 
 typedef struct {
-	uint32_t adc_buf[FSK_FILTER_BUF_SZ];
+	float adc_buf[FSK_FILTER_BUF_SZ];
 	uint32_t adc_ptr;
-	uint32_t calc_buf[FSK_FILTER_BUF_SZ];
+	float calc_buf[FSK_FILTER_BUF_SZ];
 	uint32_t calc_ptr;
 
-	uint32_t s0_sin[FSK_FILTER_BUF_SZ];
-	uint32_t s0_cos[FSK_FILTER_BUF_SZ];
-	uint32_t s1_sin[FSK_FILTER_BUF_SZ];
-	uint32_t s1_cos[FSK_FILTER_BUF_SZ];
+	float s0_sin[FSK_FILTER_BUF_SZ];
+	float s0_cos[FSK_FILTER_BUF_SZ];
+	float s1_sin[FSK_FILTER_BUF_SZ];
+	float s1_cos[FSK_FILTER_BUF_SZ];
 
-	uint32_t I_0;
-	uint32_t Q_0;
-	uint32_t I_1;
-	uint32_t Q_1;
+	float I_0;
+	float Q_0;
+	float I_1;
+	float Q_1;
 
-	uint32_t dotBuf[FSK_FILTER_BUF_SZ];
+	float dotBuf[FSK_FILTER_BUF_SZ];
 
-	uint32_t y0;
-	uint32_t y1;
+	float y0;
+	float y1;
 
 	uint32_t skip_Ts_idle;
 	uint32_t skip_Ts_idle_CNT;
@@ -63,12 +63,11 @@ typedef struct {
 
 } FSK_Filter;
 
-uint32_t FSK_Filter_DotP(uint32_t*, uint32_t*, uint32_t);
 void FSK_Filter_init(FSK_Filter*);
-void FSK_Filter_addVal(FSK_Filter*, uint32_t);
+void FSK_Filter_addVal(FSK_Filter*, float);
 void FSK_Filter_conv(FSK_Filter*);
-void FSK_Filter_update(FSK_Filter*, uint32_t);
-uint8_t FSK_Filter_isByteFin(FSK_Filter*);
+void FSK_Filter_update(FSK_Filter*, float);
+uint8_t FSK_Filter_isByteFinished(FSK_Filter*);
 
 
 

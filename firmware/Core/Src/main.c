@@ -21,6 +21,7 @@
 #include "adc.h"
 #include "dma.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -47,10 +48,10 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint16_t adc_buffer[ADC_BUF_SZ];
-uint16_t aktueller_wert;
+uint32_t adc_buffer[ADC_BUF_SZ];
+uint32_t aktueller_wert;
 uint8_t current_byte;
-uint8_t msg[MSG_BUF_SZ]
+uint8_t msg[MSG_BUF_SZ];
 uint32_t msg_pointer;
 
 FSK_Filter filter1;
@@ -67,14 +68,14 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-  /*
+
 	float newVal =
 			__LL_ADC_CALC_DATA_TO_VOLTAGE(3000, adc_buffer[0],
 					ADC_RESOLUTION12b)
 					/ 1000.0f;
-  */
+
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
-	FSK_Filter_update(&filter1, (uint32_t)adc_buffer[0]);
+	FSK_Filter_update(&filter1, newVal);
 	if (FSK_Filter_isByteFinished(&filter1)) {
     if ((&filter1)->byte == 0b10101010){
       for (uint32_t i = 0; i < MSG_BUF_SZ; ++i){
@@ -123,11 +124,12 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
+  MX_UART4_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 	FSK_Filter_init(&filter1);
 
-	HAL_ADC_Start_DMA(&hadc1, &adc_buffer, ADC_BUF_SZ);
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&adc_buffer, ADC_BUF_SZ);
 	HAL_TIM_Base_Start_IT(&htim1);
   /* USER CODE END 2 */
 
@@ -160,14 +162,15 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = 8;
   RCC_OscInitStruct.PLL.PLLN = 168;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 7;
+  RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -206,7 +209,8 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-#ifdef USE_FULL_ASSERT
+
+#ifdef  USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.

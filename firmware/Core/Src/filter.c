@@ -7,21 +7,15 @@
 
 #include "filter.h"
 
-uint32_t FSK_Filter_DotP(uint32_t* a, uint32_t* b, uint32_t arrSZ) {
-	uint32_t output = 0;  /* Final ouput */
-	for(uint32_t i = 0; i < arrSZ; i++) {
-		output += a[i] * b[i];
-	}
-	return output;
-}
+float maxY0, maxY1;
 
 void FSK_Filter_init(FSK_Filter *f) {
 	for (uint32_t k = FSK_FILTER_BUF_SZ; k > 0; --k) {
-		float t = k / FSK_FILTER_Fs;
-		f->s0_sin[k - 1] = FSK_FILTER_A * sin(2 * M_PI * FSK_FILTER_F0 * t);
-		f->s0_cos[k - 1] = FSK_FILTER_A * cos(2 * M_PI * FSK_FILTER_F0 * t);
-		f->s1_sin[k - 1] = FSK_FILTER_A * sin(2 * M_PI * FSK_FILTER_F1 * t);
-		f->s1_cos[k - 1] = FSK_FILTER_A * cos(2 * M_PI * FSK_FILTER_F0 * t);
+		float t = (float)k / FSK_FILTER_Fs;
+		f->s0_sin[k - 1] = FSK_FILTER_A * sin(2.0f * M_PI * FSK_FILTER_F0 * t);
+		f->s0_cos[k - 1] = FSK_FILTER_A * cos(2.0f * M_PI * FSK_FILTER_F0 * t);
+		f->s1_sin[k - 1] = FSK_FILTER_A * sin(2.0f * M_PI * FSK_FILTER_F1 * t);
+		f->s1_cos[k - 1] = FSK_FILTER_A * cos(2.0f * M_PI * FSK_FILTER_F1 * t);
 	}
 
 	for (uint32_t i = 0; i < FSK_FILTER_BUF_SZ; ++i) {
@@ -53,7 +47,7 @@ void FSK_Filter_init(FSK_Filter *f) {
 	f->byte = 0;
 }
 
-void FSK_Filter_addVal(FSK_Filter *f, uint32_t new_val) {
+void FSK_Filter_addVal(FSK_Filter *f, float new_val) {
 	f->adc_buf[f->adc_ptr] = new_val;
 
 	f->adc_ptr++;
@@ -101,9 +95,9 @@ void FSK_Filter_conv(FSK_Filter *f) {
 	arm_rms_f32(&conv_buf, FSK_FILTER_BUF_SZ * 2, &(f->y0));
 	*/
 
-	f->I_0 = FSK_Filter_DotP(f->calc_buf, f->s0_sin, FSK_FILTER_BUF_SZ);
-	f->Q_0 = FSK_Filter_DotP(f->calc_buf, f->s0_cos, FSK_FILTER_BUF_SZ);
-	f->y0 = (f->s0_sin*f->s0_sin) + (f->s0_cos*f->s0_cos);
+	arm_dot_prod_f32(f->calc_buf, f->s0_sin, FSK_FILTER_BUF_SZ, &f->I_0);
+	arm_dot_prod_f32(f->calc_buf, f->s0_cos, FSK_FILTER_BUF_SZ, &f->Q_0);
+	f->y0 = (f->I_0*f->I_0) + (f->Q_0*f->Q_0);
 
 	if ((f->signal_detected == 0 && f->y0 >= f->threshold_high)
 			|| (f->signal_detected == 1 && f->y0 >= f->threshold_low)) {
@@ -127,10 +121,9 @@ void FSK_Filter_conv(FSK_Filter *f) {
 	arm_rms_f32(&conv_buf, FSK_FILTER_BUF_SZ * 2, &(f->y0));
 	*/
 
-	f->I_1 = FSK_Filter_DotP(f, f->calc_buf, f->s1_sin, FSK_FILTER_BUF_SZ);
-	f->Q_1 = FSK_Filter_DotP(f, f->calc_buf, f->s1_cos, FSK_FILTER_BUF_SZ);
-	f->y1 = (f->s1_sin*f->s1_sin) + (f->s1_cos*f->s1_cos);
-
+	arm_dot_prod_f32(f->calc_buf, f->s1_sin, FSK_FILTER_BUF_SZ, &f->I_1);
+	arm_dot_prod_f32(f->calc_buf, f->s1_cos, FSK_FILTER_BUF_SZ, &f->Q_1);
+	f->y1 = (f->I_1*f->I_1) + (f->Q_1*f->Q_1);
 	if ((f->signal_detected == 0 && f->y1 >= f->threshold_high)
 			|| (f->signal_detected == 1 && f->y1 >= f->threshold_low)) {
 		if (f->signal_detected == 0) {
@@ -149,7 +142,7 @@ void FSK_Filter_conv(FSK_Filter *f) {
 	}
 }
 
-void FSK_Filter_update(FSK_Filter *f, uint32_t new_val) {
+void FSK_Filter_update(FSK_Filter *f, float new_val) {
 	FSK_Filter_addVal(f, new_val);
 
 	f->skip_Ts_idle_CNT++;
