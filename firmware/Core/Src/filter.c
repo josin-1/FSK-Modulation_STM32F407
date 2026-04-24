@@ -11,11 +11,20 @@ float maxY0, maxY1;
 
 void FSK_Filter_init(FSK_Filter *f) {
 	for (uint32_t k = FSK_FILTER_BUF_SZ; k > 0; --k) {
+		//float floatBuf = 0;
 		float t = (float)k / FSK_FILTER_Fs;
+
 		f->s0_sin[k - 1] = FSK_FILTER_A * sin(2.0f * M_PI * FSK_FILTER_F0 * t);
+		//arm_float_to_q15(&floatBuf, &(f->s0_sin[k - 1]), 1);
+
 		f->s0_cos[k - 1] = FSK_FILTER_A * cos(2.0f * M_PI * FSK_FILTER_F0 * t);
+		//arm_float_to_q15(&floatBuf, &(f->s0_cos[k - 1]), 1);
+
 		f->s1_sin[k - 1] = FSK_FILTER_A * sin(2.0f * M_PI * FSK_FILTER_F1 * t);
+		//arm_float_to_q15(&floatBuf, &(f->s1_sin[k - 1]), 1);
+
 		f->s1_cos[k - 1] = FSK_FILTER_A * cos(2.0f * M_PI * FSK_FILTER_F1 * t);
+		//arm_float_to_q15(&floatBuf, &(f->s1_cos[k - 1]), 1);
 	}
 
 	for (uint32_t i = 0; i < FSK_FILTER_BUF_SZ; ++i) {
@@ -84,21 +93,19 @@ void FSK_Filter_conv(FSK_Filter *f) {
 	// threshold_high
 
 	/*
-	float conv_buf[FSK_FILTER_BUF_SZ * 2];
+	q15_t conv_buf[FSK_FILTER_BUF_SZ * 2];
 
 	for (uint32_t i = 0; i < FSK_FILTER_BUF_SZ * 2; ++i) {
 		conv_buf[i] = 0;
 	}
 
-	arm_conv_f32(f->s0_sin, FSK_FILTER_BUF_SZ, f->calc_buf, FSK_FILTER_BUF_SZ,
-			&conv_buf);
-	arm_rms_f32(&conv_buf, FSK_FILTER_BUF_SZ * 2, &(f->y0));
+	arm_conv_q15(f->s0_sin, FSK_FILTER_BUF_SZ, f->calc_buf, FSK_FILTER_BUF_SZ, conv_buf);
+	arm_rms_q15(conv_buf, FSK_FILTER_BUF_SZ * 2, &(f->y0));
 	*/
 
 	arm_dot_prod_f32(f->calc_buf, f->s0_sin, FSK_FILTER_BUF_SZ, &f->I_0);
 	arm_dot_prod_f32(f->calc_buf, f->s0_cos, FSK_FILTER_BUF_SZ, &f->Q_0);
 	f->y0 = (f->I_0*f->I_0) + (f->Q_0*f->Q_0);
-
 	if ((f->signal_detected == 0 && f->y0 >= f->threshold_high)
 			|| (f->signal_detected == 1 && f->y0 >= f->threshold_low)) {
 		if (f->signal_detected == 0) {
@@ -116,9 +123,8 @@ void FSK_Filter_conv(FSK_Filter *f) {
 		conv_buf[i] = 0;
 	}
 
-	arm_conv_f32(f->s1_sin, FSK_FILTER_BUF_SZ, f->calc_buf, FSK_FILTER_BUF_SZ,
-			&conv_buf);
-	arm_rms_f32(&conv_buf, FSK_FILTER_BUF_SZ * 2, &(f->y0));
+	arm_conv_q15(f->s1_sin, FSK_FILTER_BUF_SZ, f->calc_buf, FSK_FILTER_BUF_SZ, conv_buf);
+	arm_rms_q15(conv_buf, FSK_FILTER_BUF_SZ * 2, &(f->y1));
 	*/
 
 	arm_dot_prod_f32(f->calc_buf, f->s1_sin, FSK_FILTER_BUF_SZ, &f->I_1);
@@ -143,6 +149,7 @@ void FSK_Filter_conv(FSK_Filter *f) {
 }
 
 void FSK_Filter_update(FSK_Filter *f, float new_val) {
+
 	FSK_Filter_addVal(f, new_val);
 
 	f->skip_Ts_idle_CNT++;

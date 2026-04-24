@@ -21,8 +21,8 @@
 #define FSK_FILTER_A 0.2f
 
 #define FSK_FILTER_IDLE_STEP_SZ 10
-#define FSK_FILTER_SCHWELLENWERT_HIGH 16
-#define FSK_FILTER_SCHWELLENWERT_LOW 12
+#define FSK_FILTER_SCHWELLENWERT_HIGH 100
+#define FSK_FILTER_SCHWELLENWERT_LOW 90
 
 
 #define FSK_FILTER_BUF_SZ 250 // T_Bit * Fs
@@ -42,8 +42,6 @@ typedef struct {
 	float Q_0;
 	float I_1;
 	float Q_1;
-
-	float dotBuf[FSK_FILTER_BUF_SZ];
 
 	float y0;
 	float y1;

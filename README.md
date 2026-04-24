@@ -24,4 +24,5 @@ Right now there are two possibile Demodulations implemented, once with a convolu
 
 ## STM32
 The STM32F407 will be programmed using STM32CubeIDE.<br>
-**Work in Progress...**
+It is similiar to the Matlab script implemented in filter.h and filter.c, the calls for the filter interface are all done in the Timer Callback.<br>
+To speed up the UART sending process, the float variables are sent as pure binary and then interpreted from the comParser.py<br>
