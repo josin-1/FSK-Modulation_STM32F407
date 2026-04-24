@@ -1,0 +1,152 @@
+{
+    "actions": [
+    ],
+    "groups": [
+        {
+            "datasets": [
+                {
+                    "alarmEnabled": false,
+                    "alarmHigh": 80,
+                    "alarmLow": 20,
+                    "fft": false,
+                    "fftMax": 0,
+                    "fftMin": 0,
+                    "fftSamples": 256,
+                    "fftSamplingRate": 100,
+                    "graph": true,
+                    "index": 1,
+                    "led": false,
+                    "ledHigh": 80,
+                    "log": false,
+                    "overviewDisplay": false,
+                    "plotMax": 0,
+                    "plotMin": 0,
+                    "title": "ADC-Value",
+                    "units": "",
+                    "value": "--.--",
+                    "widget": "",
+                    "widgetMax": 0,
+                    "widgetMin": 0,
+                    "xAxis": -1
+                },
+                {
+                    "alarmEnabled": false,
+                    "alarmHigh": 80,
+                    "alarmLow": 20,
+                    "fft": false,
+                    "fftMax": 0,
+                    "fftMin": 0,
+                    "fftSamples": 256,
+                    "fftSamplingRate": 100,
+                    "graph": true,
+                    "index": 2,
+                    "led": false,
+                    "ledHigh": 80,
+                    "log": false,
+                    "overviewDisplay": false,
+                    "plotMax": 0,
+                    "plotMin": 0,
+                    "title": "Y0",
+                    "units": "",
+                    "value": "--.--",
+                    "widget": "",
+                    "widgetMax": 0,
+                    "widgetMin": 0,
+                    "xAxis": -1
+                },
+                {
+                    "alarmEnabled": false,
+                    "alarmHigh": 80,
+                    "alarmLow": 20,
+                    "fft": false,
+                    "fftMax": 0,
+                    "fftMin": 0,
+                    "fftSamples": 256,
+                    "fftSamplingRate": 100,
+                    "graph": true,
+                    "index": 3,
+                    "led": false,
+                    "ledHigh": 80,
+                    "log": false,
+                    "overviewDisplay": false,
+                    "plotMax": 0,
+                    "plotMin": 0,
+                    "title": "Y1",
+                    "units": "",
+                    "value": "--.--",
+                    "widget": "",
+                    "widgetMax": 0,
+                    "widgetMin": 0,
+                    "xAxis": -1
+                }
+            ],
+            "title": "Gruppe",
+            "widget": ""
+        }
+    ],
+    "hexadecimalDelimiters": false,
+    "pointCount": 1000,
+    "sources": [
+        {
+            "busType": 0,
+            "checksum": "",
+            "checksumAlgorithm": "",
+            "connection": {
+                "autoReconnect": true,
+                "baudRate": 10,
+                "dataBitsIndex": 3,
+                "deviceId": {
+                    "description": "com0com - serial port emulator",
+                    "portName": "COM9"
+                },
+                "dtr": true,
+                "flowControlIndex": 0,
+                "parityIndex": 0,
+                "portIndex": 4,
+                "stopBitsIndex": 0
+            },
+            "decoder": 0,
+            "decoderMethod": 0,
+            "frameDetection": 0,
+            "frameEnd": "\\n",
+            "frameParserCode": "/**\n * Comma-Separated Values (CSV) Parser\n *\n * Parses comma-separated data into an array of values.\n *\n * INPUT FORMAT: \"a,b,c,d,e,f\"\n * OUTPUT ARRAY: [\"a\", \"b\", \"c\", \"d\", \"e\", \"f\"]\n *\n * Note: Frame delimiters are automatically removed by Serial Studio.\n */\n\n//------------------------------------------------------------------------------\n// Frame Parser Function\n//------------------------------------------------------------------------------\n\n/**\n * Parses a CSV frame into an array of values.\n *\n * @param {string} frame - The CSV data from the data source\n * @returns {array} Array of string values\n */\nfunction parse(frame) {\n  return frame.split(',');\n}\n",
+            "frameStart": "$",
+            "hexadecimalDelimiters": false,
+            "sourceId": 0,
+            "title": "Gerät A"
+        }
+    ],
+    "title": "FSK-Demodulator Debug",
+    "widgetSettings": {
+        "2:1:-1": {
+            "userShowLegends": true
+        },
+        "9:0:1": {
+            "interpolate": true,
+            "showAreaUnderPlot": false,
+            "userShowXLabel": true,
+            "userShowYLabel": true
+        },
+        "9:0:2": {
+            "userShowXLabel": false,
+            "userShowYLabel": true
+        },
+        "9:0:3": {
+            "interpolate": true,
+            "showAreaUnderPlot": false,
+            "userShowXLabel": false,
+            "userShowYLabel": true
+        },
+        "layout:-2": {
+            "data": {
+                "autoLayout": true,
+                "windowOrder": [
+                    0,
+                    1,
+                    2,
+                    3
+                ]
+            }
+        }
+    }
+}
